@@ -1,0 +1,124 @@
+class FileSystem {
+public:
+    struct data{
+        string name;
+        //data* parent;
+        map<string,string> files;
+        map<string,data*> children;
+        data(string s){name = s;}
+    };
+    data* root = NULL;
+    FileSystem() {
+        root = new data("/");
+    }
+    vector<string> resolvePath(string filePath){
+        // a case for pushing back / as first entry in the ans vector
+        int begin = 1;
+        vector<string> splitPath;
+        splitPath.push_back("/");
+        if(filePath.size()==1) return splitPath;
+        for(int i = 1; i < filePath.size(); i++){
+            if(filePath[i] == '/'){
+                splitPath.push_back(filePath.substr(begin,i-begin));
+                begin = i + 1;
+            }
+            if(i == filePath.size()-1)
+                splitPath.push_back(filePath.substr(begin,i-begin+1));
+        }
+        return splitPath;
+    }
+    
+    vector<string> ls(string path) {
+        //for files and children folders, merge(sort) two sorted maps for display
+        vector<string> ans;
+        vector<string> splitPath = resolvePath(path);
+        data* trav = root;
+        for(int i = 0; i < splitPath.size()-1; i++){
+            trav = trav->children[splitPath[i]];
+        }
+        int sz = splitPath.size();
+        string tail_path = splitPath[sz-1];
+        //if dir path
+        if(trav->children.find(tail_path) != trav->children.end()){
+            trav=trav->children[tail_path];
+        
+        int i = 0; int j = 0;
+            auto it1 = trav->files.begin();
+            auto it2 = trav->children.begin();
+            while(it1 != trav->files.end() && it2 != trav->children.end()){
+                if(it1->first < it2->first) {
+                    ans.push_back(it1->first);
+                    it1++;
+                }
+                else {
+                    ans.push_back(it2->first);
+                    it2++;
+                }
+            }
+            while(it1 != trav->files.end()){
+                ans.push_back(it1->first);
+                it1++;
+            }
+            while(it2 != trav->children.end()){
+                ans.push_back(it2->first);
+                it2++;
+            }
+        }
+        //else look for files in same node with matching name
+        else{
+            int len = tail_path.size();
+            auto it =trav->files.begin();
+            for(it = trav->files.begin(); it != trav->files.end(); it++){
+                if(it->first.substr(0,len) == tail_path) break;
+            }
+            while(it->first.substr(0,len) == tail_path){
+                ans.push_back(it->first);
+                it++;
+            }
+        }
+        return ans;
+    }
+    
+    void mkdir(string path) {
+        //constant time access if a chilren dir exists
+        vector<string> splitPath = resolvePath(path);
+        data* trav = root;
+        for(int i = 0; i < splitPath.size(); i++){
+            if(trav->children.find(splitPath[i]) == trav->children.end()){
+                data* child = new data(splitPath[i]);
+                trav->children[splitPath[i]] = child;
+            }
+            trav = trav->children[splitPath[i]];
+        }
+    }
+    
+    void addContentToFile(string filePath, string content) {
+        vector<string> splitPath = resolvePath(filePath);
+        data* trav = root;
+        for(int i = 0; i < splitPath.size()-1; i++){
+            trav = trav->children[splitPath[i]];
+        }
+        int last_id = splitPath.size()-1;
+        trav->files[splitPath[last_id]] += content;
+    }
+    
+    string readContentFromFile(string filePath) {
+        vector<string> splitPath = resolvePath(filePath);
+        data* trav = root;
+        for(int i = 0; i < splitPath.size()-1; i++){
+            trav = trav->children[splitPath[i]];
+        }
+        int last_id = splitPath.size()-1;
+        return trav->files[splitPath[last_id]];
+    }
+    
+};
+
+/**
+ * Your FileSystem object will be instantiated and called as such:
+ * FileSystem* obj = new FileSystem();
+ * vector<string> param_1 = obj->ls(path);
+ * obj->mkdir(path);
+ * obj->addContentToFile(filePath,content);
+ * string param_4 = obj->readContentFromFile(filePath);
+ */
