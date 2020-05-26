@@ -1,15 +1,16 @@
 class Solution {
 public:
-    long double kdutil(int i, int N, unordered_map<int, vector<int>> moves, map<pair<int,int>, long double>& dp){
+    int kdutil(int i, int N, unordered_map<int, vector<int>> moves, map<pair<int,int>, int >& dp){
     if(N==0) return 1;
     if(dp.find({i,N}) != dp.end()) return dp[{i,N}];
     vector<int> temp = moves[i];
-    long double count = 0;
+    int count = 0;
+    int div = (pow(10,9)) + 7;
     for(int j = 0; j < temp.size(); j++){
-        count += kdutil(temp[j],N-1,moves, dp);
+        count = (count + kdutil(temp[j],N-1,moves, dp)) % div;
     }
-    dp[{i,N}] = count;
-    return count;
+    dp[{i,N}] = count % div;
+    return count % div;
 }
 
 int knightDialer(int N){
@@ -24,12 +25,13 @@ int knightDialer(int N){
     moves[7] = {2,6};
     moves[8] = {1,3};
     moves[9] = {2,4};
-    long double count = 0;
-    map<pair<int,int>, long double> dp;
+    int count = 0;
+    int div = (pow(10,9)) + 7;
+    map<pair<int,int>, int> dp;
     for(int i = 0; i <= 9; i++){
-        count += kdutil(i, N-1, moves, dp);
+        count = (count + kdutil(i, N-1, moves, dp)) % div;
     }
-    long double div = (pow(10,9)) + 7;
-    return fmod(count, div);
+    
+    return (count % div);
 }
 };
